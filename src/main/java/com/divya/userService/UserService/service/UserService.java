@@ -1,5 +1,6 @@
 package com.divya.userService.UserService.service;
 
+import com.divya.userService.UserService.dto.LogoutRequestdto;
 import com.divya.userService.UserService.dto.SignupRequestdto;
 import com.divya.userService.UserService.exception.InvalidPasswordException;
 import com.divya.userService.UserService.exception.InvalidTokenException;
@@ -41,14 +42,15 @@ public class UserService {
         User user = User.builder().email(req.getEmail())
                 .name(req.getName()).hashedPassword(bCryptPasswordEncoder.encode(req.getPassword()))
                 .phone(req.getPhone())
+                .email(req.getEmail())
                 .build();
         user.setVerified(false);
        Role role= new Role("admin");
         Role role2 = roleRepository.findRoleByName(role.getName());
        if(role2==null){
-           roleRepository.save(role);
+           role2=roleRepository.save(role);
         };
-        user.setRoles(List.of(role));
+        user.setRoles(List.of(role2));
         user.setStatus("active");
         return userRepository.save(user);
     }
@@ -80,16 +82,16 @@ public class UserService {
         return token;
     }
 
-    public User validateToken(Token token) throws InvalidTokenException {
-        Optional<Token> optionalToken= tokenRepository.findByValueAndDeleted(token.getValue(),false);
+    public User validateToken(String token) throws InvalidTokenException {
+        Optional<Token> optionalToken= tokenRepository.findByValueAndDeleted(token,false);
         if(optionalToken.isEmpty()){
             throw new InvalidTokenException("Invaid token");
         }
         return optionalToken.get().getUser();
     }
 
-    public Token logout(String token) throws InvalidTokenException{
-        Optional<Token> optional = tokenRepository.findByValueAndDeleted(token, false);
+    public Token logout(LogoutRequestdto logoutRequestdto) throws InvalidTokenException{
+        Optional<Token> optional = tokenRepository.findByValueAndDeleted(logoutRequestdto.getToken(), false);
         if(optional.isPresent())
             return optional.get();
         else{
