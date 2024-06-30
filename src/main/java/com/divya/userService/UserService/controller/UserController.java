@@ -1,6 +1,7 @@
 package com.divya.userService.UserService.controller;
 
 import com.divya.userService.UserService.dto.LoginRequestdto;
+import com.divya.userService.UserService.dto.LogoutRequestdto;
 import com.divya.userService.UserService.dto.SignupRequestdto;
 import com.divya.userService.UserService.dto.Userdto;
 import com.divya.userService.UserService.exception.InvalidTokenException;
@@ -19,7 +20,7 @@ public class UserController {
     @Autowired
     UserService userService;
 
-    @PostMapping("/signup")
+    @PostMapping("/signup")//http://localhost:3030/users/signup
     public Userdto Signup(@RequestBody SignupRequestdto req) {
         User user = userService.signup(req);
         Userdto dto = Userdto.from(user);
@@ -27,7 +28,7 @@ public class UserController {
 
     }
 
-    @PostMapping("/login")
+    @PostMapping("/login")//http://localhost:3030/users/login
     public Token login(@RequestBody LoginRequestdto req) {
         try {
             return userService.login(req.getEmail(), req.getPassword());
@@ -37,14 +38,23 @@ public class UserController {
     }
 
     @PostMapping("/validate/{token}")
-    public ResponseEntity<Userdto> validateToken(Token token) throws InvalidTokenException {
+    public ResponseEntity<Userdto> validateToken(@PathVariable String token) throws InvalidTokenException {
         Userdto userdto= Userdto.from(userService.validateToken(token));
-        return new ResponseEntity<Userdto>(HttpStatus.OK);
+        return new ResponseEntity<Userdto>(userdto,HttpStatus.OK);
 
     }
-@PostMapping("/logout/{token}")
-    public Token logout(@PathVariable String token) throws InvalidTokenException {
-        return userService.logout(token);
+@PostMapping("/logout")//http://localhost:3030/users/logout
+    public ResponseEntity<Void> logout(@RequestBody LogoutRequestdto logoutRequestdto) throws InvalidTokenException {
+        try {
+             userService.logout(logoutRequestdto);
+             ResponseEntity<Void> resp= new ResponseEntity<>(HttpStatus.OK);
+             return resp;
+        }
+
+        catch(Exception e){
+            System.out.println("Something went wrong");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
 
